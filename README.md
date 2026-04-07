@@ -19,12 +19,24 @@ Sistema RAG (Retrieval-Augmented Generation) que permite ingerir documentos PDF 
 ### 1. Configurar variáveis de ambiente
 
 ```bash
-cp .env.example .env
+touch .env
 ```
 
-Edite o `.env` e preencha **pelo menos uma** API key:
+Edite o arquivo `.env` e preencha a configuração básica (`DATABASE_URL`, etc) e **pelo menos uma** API key:
 
-```
+```text
+# Configurações de Banco de Dados
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=change-me
+POSTGRES_DB=rag
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5433
+
+DATABASE_URL=postgresql+psycopg://postgres:change-me@localhost:5433/rag
+PG_VECTOR_COLLECTION_NAME=pdf_chunks
+PDF_PATH=document.pdf
+
+# Credenciais
 OPENAI_API_KEY=sk-...
 # ou
 GOOGLE_API_KEY=AIza...
@@ -90,7 +102,10 @@ Encerrando chat. Até logo!
 
 ## Testes
 
+Certifique-se de ter o `pytest` instalado (não incluso no `requirements.txt` por ser dependência de dev):
+
 ```bash
+pip install pytest
 python -m pytest tests/ -v
 ```
 
@@ -99,15 +114,16 @@ python -m pytest tests/ -v
 ## Estrutura do projeto
 
 ```
-├── docker-compose.yml        # PostgreSQL + pgVector
-├── requirements.txt          # Dependências Python
-├── .env.example              # Template de variáveis de ambiente
+├── docker-compose.yml        # PostgreSQL + pgVector configurado (porta 5433)
+├── requirements.txt          # Dependências Python globais
 ├── document.pdf              # PDF para ingestão
 ├── src/
-│   ├── ingest.py             # Script de ingestão do PDF
-│   ├── search.py             # Busca semântica + chamada LLM
-│   ├── chat.py               # CLI para interação com usuário
-│   └── prompt.md             # Especificação do projeto
+│   ├── ingest.py             # Script de ingestão do PDF em blocos
+│   ├── search.py             # Busca semântica + chamada LLM (Retriever)
+│   ├── chat.py               # CLI Interativa para conversar com o documento
+│   ├── providers.py          # Definições de Fallback e Provedores LLM/Embeddings
+│   ├── settings.py           # Parser centralizado de variáveis de ambiente
+│   ├── logging_config.py     # Setup de formato e level de logs
 ├── tests/
 │   └── test_business_rules.py # Testes de regras de negócio
 └── README.md
